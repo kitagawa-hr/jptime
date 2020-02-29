@@ -1,11 +1,12 @@
 [tool.poetry]
 name = "jptime"
 version = "0.1.0"
-description = ""
-authors = ["kitagawa-hr <kitagawa@cancerscan.jp>"]
+description = "handle japanese time format"
+readme = "README.md"
+authors = ["kitagawa-hr <kitagawahr@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.6"
 japanese-numbers-python = "^0.2.0"
 python-dateutil = "^2.8.1"
 
