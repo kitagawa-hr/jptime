@@ -1,0 +1,31 @@
+version: 2
+jobs:
+  build:
+    working_directory: ~
+    docker:
+      - image: circleci/python:3.6.8
+    steps:
+      - checkout
+      - restore_cache:
+          key: poetrydeps-{{ checksum "poetry.lock" }}
+      - run:
+          name: Install dependencies
+          command: |
+            poetry config settings.virtualenvs.in-project true
+            poetry install -v
+      - save_cache:
+          key: poetrydeps-{{ checksum "poetry.lock" }}
+          paths:
+            - "./.venv"
+      - run:
+          name: Run lint
+          command: |
+            poetry run flake8 jptime.py test_jptime.py
+      - run:
+          name: Run mypy
+          command: |
+            poetry run mypy jptime.py
+      - run:
+          name: Run tests
+          command: |
+            poetry run pytest -v test_jptime.py
