@@ -12,7 +12,7 @@ jobs:
           name: Install dependencies
           command: |
             pip install poetry==1.0.5
-            poetry config settings.virtualenvs.in-project true
+            poetry config virtualenvs.in-project true
             poetry install -v
       - save_cache:
           key: poetrydeps-{{ checksum "poetry.lock" }}
