@@ -2,6 +2,12 @@
 
 jptime handle japanese time format.
 
+## Installation
+
+```sh
+pip install jptime
+```
+
 ## Usage
 
 ```py
