@@ -3,7 +3,7 @@ jobs:
   build:
     working_directory: ~
     docker:
-      - image: circleci/python:3.6.8
+      - image: python:3.6.8
     steps:
       - checkout
       - restore_cache:
@@ -11,6 +11,7 @@ jobs:
       - run:
           name: Install dependencies
           command: |
+            pip install poetry==1.0.5
             poetry config settings.virtualenvs.in-project true
             poetry install -v
       - save_cache:
