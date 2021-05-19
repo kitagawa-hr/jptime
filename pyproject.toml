@@ -27,8 +27,8 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = "^3.6"
-japanese-numbers-python = "^0.2.0"
 python-dateutil = "^2.8.1"
+japanese-number-converter = "1.0.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
