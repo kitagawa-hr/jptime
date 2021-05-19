@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Pattern, Tuple
 
 from dateutil import parser
-import japanese_numbers
+import jnc
 
 
 __version__ = "0.1.1"
@@ -133,6 +133,13 @@ def from_str(date: str) -> "JPTime":
     raise ParseError(f"Cannot parse {normalized_date} to JPTime.")
 
 
+def parse_japanese_number(s: str) -> int:
+    try:
+        return int(s)
+    except ValueError:
+        return jnc.ja_to_arabic(s)
+
+
 def _from_japanese_era_with_symbol(s: str) -> JPTime:
     """symbol + year/month/day format -> JPTime
     e.g. 平成元年三月二十三日, 昭和5年3月23日, S22.9.11
@@ -140,9 +147,12 @@ def _from_japanese_era_with_symbol(s: str) -> JPTime:
     for era in ALL_ERAS:
         if era.symbol_pattern.match(s):
             try:
-                y, m, d = map(int, japanese_numbers.to_arabic_numbers(s.replace("元年", "1年")))
+                y, m, d = map(
+                    parse_japanese_number,
+                    re.findall(r"(\d+|[〇一二三四五六七八九十]+)", s.replace("元年", "一年"))
+                )
                 return JPTime(era.code, y, m, d)
-            except (ValueError, ValidationError):
+            except ValueError :
                 continue
     raise ParseError(f"{s} is invalid format.")
 
