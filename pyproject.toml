@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "jptime"
-version = "0.1.1"
+version = "1.0.0"
 description = "handle japanese time format"
 readme = "README.md"
 authors = ["kitagawa-hr <kitagawahr@gmail.com>"]
