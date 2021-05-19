@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "jptime"
-version = "0.1.1"
+version = "1.0.0"
 description = "handle japanese time format"
 readme = "README.md"
 authors = ["kitagawa-hr <kitagawahr@gmail.com>"]
@@ -23,6 +23,10 @@ classifiers = [
     "Topic :: Software Development :: Libraries",
     "Topic :: Software Development",
     "Typing :: Typed",
+]
+packages = [
+    { include = "jptime" },
+    { include = "jptime/py.typed" }
 ]
 
 [tool.poetry.dependencies]
