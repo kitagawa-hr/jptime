@@ -24,6 +24,10 @@ classifiers = [
     "Topic :: Software Development",
     "Typing :: Typed",
 ]
+packages = [
+    { include = "jptime" },
+    { include = "jptime/py.typed" }
+]
 
 [tool.poetry.dependencies]
 python = "^3.6"
