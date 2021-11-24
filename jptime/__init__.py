@@ -151,7 +151,7 @@ def from_str(date_str: str) -> "JPTime":
     raise ParseError(f"Cannot parse {normalized_date} to JPTime.")
 
 
-def parse_japanese_number(s: str) -> int:
+def _parse_japanese_number(s: str) -> int:
     try:
         return int(s)
     except ValueError:
@@ -165,7 +165,7 @@ def _from_japanese_era_with_symbol(s: str) -> JPTime:
     s = s.replace("元年", "一年")
     try:
         era, rest = JPEraEnum.parse(s)
-        y, m, d = map(parse_japanese_number, re.findall(r"(\d+|[〇一二三四五六七八九十]+)", rest))
+        y, m, d = map(_parse_japanese_number, re.findall(r"(\d+|[〇一二三四五六七八九十]+)", rest))
         return JPTime(era.code, y, m, d)
     except (TypeError, ValueError):
         raise ParseError(f"{s} is invalid format.")
@@ -174,7 +174,12 @@ def _from_japanese_era_with_symbol(s: str) -> JPTime:
 def _from_japanese_era_with_code(s: str) -> JPTime:
     """gyymmdd format -> JPTime"""
     try:
-        g, yymmdd = divmod(int(s), 1000000)
+        parsed = JPEraEnum.parse(s)
+        if parsed is None:
+            g, yymmdd = divmod(int(s), 1000000)
+        else:
+            g = parsed[0].code
+            yymmdd = int(parsed[1])
         return JPTime(g, *_yymmdd2ymd(yymmdd))
     except (ValueError, IndexError):
         raise ParseError(f"{s} is invalid format.")
@@ -199,6 +204,7 @@ def _from_christian_era(s: str) -> JPTime:
 
     using dateutil.parser
     """
+    s = re.sub(r"[年月日]", " ", s)
     try:
         dt = parser.parse(s)
         return from_datetime(dt)

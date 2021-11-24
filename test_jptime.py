@@ -50,12 +50,30 @@ jp_code_cases = [
     ("4010108", jptime.JPTime(4, 1, 1, 8)),  # Heisei begin day
     ("4310430", jptime.JPTime(4, 31, 4, 30)),  # Heisei end day
     ("5010501", jptime.JPTime(5, 1, 5, 1)),  # Reiwa begin day
+    # alphabet cases
+    ("M100323", jptime.JPTime(1, 10, 3, 23)),
+    ("T100402", jptime.JPTime(2, 10, 4, 2)),
+    ("S600927", jptime.JPTime(3, 60, 9, 27)),
+    ("H241102", jptime.JPTime(4, 24, 11, 2)),
+    ("R010103", jptime.JPTime(5, 1, 1, 3)),
+    ("M010125", jptime.JPTime(1, 1, 1, 25)),  # Meiji begin day
+    ("M450729", jptime.JPTime(1, 45, 7, 29)),  # MEiji end day
+    ("T010730", jptime.JPTime(2, 1, 7, 30)),  # Taisho begin day
+    ("T151224", jptime.JPTime(2, 15, 12, 24)),  # Taisho end day
+    ("S011225", jptime.JPTime(3, 1, 12, 25)),  # Showa begin day
+    ("S640107", jptime.JPTime(3, 64, 1, 7)),  # Showa end day
+    ("H010108", jptime.JPTime(4, 1, 1, 8)),  # Heisei begin day
+    ("H310430", jptime.JPTime(4, 31, 4, 30)),  # Heisei end day
+    ("R010501", jptime.JPTime(5, 1, 5, 1)),  # Reiwa begin day
 ]
 christian_cases = [
     ("1927-9-11", jptime.JPTime(3, 2, 9, 11)),
     ("1930/03/23", jptime.JPTime(3, 5, 3, 23)),
     ("1947.09.11", jptime.JPTime(3, 22, 9, 11)),
     ("1970.3.23", jptime.JPTime(3, 45, 3, 23)),
+    ("1970 3 23", jptime.JPTime(3, 45, 3, 23)),
+    ("1970年3月23日", jptime.JPTime(3, 45, 3, 23)),
+    ("1970 年3 月23 日", jptime.JPTime(3, 45, 3, 23)),
 ]
 str_and_jptimes = jp_symbol_cases + jp_code_cases + christian_cases
 
