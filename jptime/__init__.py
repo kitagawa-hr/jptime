@@ -1,7 +1,8 @@
 import re
 import unicodedata
-from datetime import datetime
-from typing import Pattern, Tuple
+from datetime import datetime, date
+from typing import Pattern, Tuple, Optional
+from enum import Enum
 
 from dateutil import parser
 import jnc
@@ -23,7 +24,7 @@ class ValidationError(JPTimeError):
 
 
 class JPEra:
-    def __init__(self, name: str, code: int, symbol_pattern: Pattern, begin: datetime, end: datetime,) -> None:
+    def __init__(self, name: str, code: int, symbol_pattern: Pattern, begin: datetime, end: datetime) -> None:
         self.name = name
         self.code = code
         self.symbol_pattern = symbol_pattern
@@ -31,31 +32,43 @@ class JPEra:
         self.end = end
 
 
-Meiji = JPEra("明治", 1, re.compile(r"明治|M|\u337e"), datetime(1868, 1, 25), datetime(1912, 7, 29))
-Taisho = JPEra("大正", 2, re.compile(r"大正|T|\u337d"), datetime(1912, 7, 30), datetime(1926, 12, 24))
-Showa = JPEra("昭和", 3, re.compile(r"昭和|S|\u337c"), datetime(1926, 12, 25), datetime(1989, 1, 7))
-Heisei = JPEra("平成", 4, re.compile(r"平成|H|\u337b"), datetime(1989, 1, 8), datetime(2019, 4, 30))
-Reiwa = JPEra("令和", 5, re.compile(r"令和|R|\u32ff"), datetime(2019, 5, 1), datetime.max)
+class JPEraEnum(Enum):
+    Meiji = JPEra("明治", 1, re.compile(r"明治|M|\u337e"), datetime(1868, 1, 25), datetime(1912, 7, 29))
+    Taisho = JPEra("大正", 2, re.compile(r"大正|T|\u337d"), datetime(1912, 7, 30), datetime(1926, 12, 24))
+    Showa = JPEra("昭和", 3, re.compile(r"昭和|S|\u337c"), datetime(1926, 12, 25), datetime(1989, 1, 7))
+    Heisei = JPEra("平成", 4, re.compile(r"平成|H|\u337b"), datetime(1989, 1, 8), datetime(2019, 4, 30))
+    Reiwa = JPEra("令和", 5, re.compile(r"令和|R|\u32ff"), datetime(2019, 5, 1), datetime.max)
 
-ALL_ERAS = [
-    Meiji,
-    Taisho,
-    Showa,
-    Heisei,
-    Reiwa,
-]
+    @classmethod
+    def code2era(cls, code: int) -> JPEra:
+        return list(JPEraEnum)[code - 1].value
+
+    @classmethod
+    def parse(cls, s: str) -> Optional[Tuple[JPEra, str]]:
+        """parse string to (JPEra, rest)
+
+        Examples:
+            # >>> parsed = JPEraEnum.parse("平成３年３月２３日")
+            # >>> assert parsed[0].code == 1
+            # >>> assert parsed[1] "３年３月２３日")
+        """
+        for era_enum in cls:
+            era = era_enum.value
+            match = era.symbol_pattern.match(s)
+            if match:
+                return (era, s[match.end() :])
 
 
 class JPTime:
     def __init__(self, era_code: int, jp_year: int, month: int, day: int) -> None:
-        if era_code <= 0 or era_code > len(ALL_ERAS):
+        if era_code <= 0 or era_code > len(JPEraEnum):
             raise ValidationError(f"{era_code} is out of range.")
         self.era_code = era_code
         self.jp_year = jp_year
         self.month = month
         self.day = day
         try:
-            self.jp_era = ALL_ERAS[era_code - 1]
+            self.jp_era = JPEraEnum.code2era(era_code)
             assert self.to_datetime() <= self.jp_era.end
         except (IndexError, AssertionError):
             raise ValidationError(f"{self} is invalid.")
@@ -79,9 +92,13 @@ class JPTime:
     def to_tuple(self) -> Tuple[int, int, int, int]:
         return self.era_code, self.jp_year, self.month, self.day
 
-    def to_datetime(self) -> datetime:
+    def to_date(self) -> datetime:
         christian_year = self.jp_year + self.jp_era.begin.year - 1
-        return datetime(christian_year, self.month, self.day)
+        return date(christian_year, self.month, self.day)
+
+    def to_datetime(self) -> datetime:
+        date_ = self.to_date()
+        return datetime(date_.year, date_.month, date_.day)
 
     @classmethod
     def from_datetime(cls, dt: datetime) -> "JPTime":
@@ -94,14 +111,15 @@ class JPTime:
 
 def from_datetime(dt: datetime) -> "JPTime":
     """datetime -> JPTime"""
-    for era in ALL_ERAS:
+    for era_enum in JPEraEnum:
+        era = era_enum.value
         if era.begin <= dt <= era.end:
             jp_year = dt.year - era.begin.year + 1
             return JPTime(era.code, jp_year, dt.month, dt.day)
     raise ParseError(f"Cannot convert {dt} to jp format.")
 
 
-def from_str(date: str) -> "JPTime":
+def from_str(date_str: str) -> "JPTime":
     """str -> JPTime
 
     Supported formats:
@@ -115,7 +133,7 @@ def from_str(date: str) -> "JPTime":
         JPTime(4, 3, 3, 23)
         >>> from_str("平成三年三月二十三日")
         JPTime(4, 3, 3, 23)
-        >>> from_str("40323")
+        >>> from_str("4030323")
         JPTime(4, 3, 3, 23)
         >>> from_str("19910323")
         JPTime(4, 3, 3, 23)
@@ -123,7 +141,7 @@ def from_str(date: str) -> "JPTime":
         JPTime(4, 3, 3, 23)
 
     """
-    normalized_date = unicodedata.normalize("NFKC", date)
+    normalized_date = unicodedata.normalize("NFKC", date_str)
     converters = (_from_japanese_era_with_symbol, _from_japanese_era_with_code, _from_christian_era)
     for converter in converters:
         try:
@@ -144,17 +162,13 @@ def _from_japanese_era_with_symbol(s: str) -> JPTime:
     """symbol + year/month/day format -> JPTime
     e.g. 平成元年三月二十三日, 昭和5年3月23日, S22.9.11
     """
-    for era in ALL_ERAS:
-        if era.symbol_pattern.match(s):
-            try:
-                y, m, d = map(
-                    parse_japanese_number,
-                    re.findall(r"(\d+|[〇一二三四五六七八九十]+)", s.replace("元年", "一年"))
-                )
-                return JPTime(era.code, y, m, d)
-            except ValueError :
-                continue
-    raise ParseError(f"{s} is invalid format.")
+    s = s.replace("元年", "一年")
+    try:
+        era, rest = JPEraEnum.parse(s)
+        y, m, d = map(parse_japanese_number, re.findall(r"(\d+|[〇一二三四五六七八九十]+)", rest))
+        return JPTime(era.code, y, m, d)
+    except (TypeError, ValueError):
+        raise ParseError(f"{s} is invalid format.")
 
 
 def _from_japanese_era_with_code(s: str) -> JPTime:
@@ -185,7 +199,6 @@ def _from_christian_era(s: str) -> JPTime:
 
     using dateutil.parser
     """
-
     try:
         dt = parser.parse(s)
         return from_datetime(dt)
