@@ -30,6 +30,6 @@ assert jpt.to_tuple() == (5, 1, 5, 1) # 令和1年5月1日
   - era_symbol/yy/mm/dd (allow kanji number)
     (e.g. 昭和5年3月3日)
   - era_code + yymmdd
-    (e.g. 3031123)
+    (e.g. 3031123, H040323)
 - christian era (delegate to dateutil.parser)
-  (e.g. 19920323, 2018-12-12)
+  (e.g. 19920323, 2018-12-12, 2018年8月13日)
